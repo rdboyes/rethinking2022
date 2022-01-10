@@ -120,6 +120,7 @@ water = biased_sample() * 20
 land = 20 - water
 ```
 
+First attempt: adjust the observed number of water observations using the known bias. This method requires rounding the adjusted number to the nearest int to get a result from dbinom, introducing some inaccuracy. Need some way to combine the first and second random processes.
 
 ```{r}
 create_posterior_biased <- function(water, land, 
@@ -128,8 +129,10 @@ create_posterior_biased <- function(water, land,
                              prior = rep(1, grid_resolution)){
   
   p_grid <- seq(from=0, to=1, length.out = grid_resolution)
-  likelihood <- dbinom(round(water + land_bias * water/(water + land), 0),
-                             size = (water + land), prob = p_grid)
+  
+  likelihood <- dbinom(round(water/(1-land_bias), 0),
+                       size = (water + land), prob = p_grid)
+  
   unstd.posterior <- likelihood * prior
   
   return(data.frame(x = p_grid, y = unstd.posterior / sum(unstd.posterior)))
